@@ -1,0 +1,19 @@
+services:
+  localstack:
+    image: localstack/localstack:3        # community edition — free, no auth token required
+                                          # (the :latest / 2026.x image now gates on a LocalStack license)
+    container_name: local-viewer-example
+    ports:
+      - "4566:4566"            # edge port — all AWS service APIs
+    environment:
+      - SERVICES=s3,sqs,cloudformation
+      - DEBUG=0
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "./localstack-data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20

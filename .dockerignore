@@ -1,0 +1,14 @@
+# keep the build context small — Go needs only go.{mod,sum}, src/, VERSION
+.git/
+.github/
+node_modules/
+example/
+data/
+dist/
+out/
+*.log
+*.zip
+*.md
+/local-viewer
+/lsv
+.playwright-mcp/

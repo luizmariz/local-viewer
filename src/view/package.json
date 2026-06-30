@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "//": "Scopes web/src/** as native ES modules (for Node tooling like `node --check` and test harnesses). Browsers ignore this; it does not affect the Go build or the root CommonJS package.json."
+}

@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Demo stack for localstack-admin-lite. Created as a CHANGE SET only (not executed),
+  so the viewer's CloudFormation tab has something pending to Execute. Executing it
+  provisions one S3 bucket and one SQS queue.
+
+Resources:
+  DemoReportsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: demo-cfn-reports
+
+  DemoEventsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: demo-cfn-events
+      MessageRetentionPeriod: 345600
+
+Outputs:
+  BucketName:
+    Value: !Ref DemoReportsBucket
+  QueueUrl:
+    Value: !Ref DemoEventsQueue

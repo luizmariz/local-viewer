@@ -1,0 +1,26 @@
+# One-command local build & run (Portainer-style single container).
+#   docker compose up -d   →  http://localhost:8080
+# For the published image instead of building, see README.md.
+services:
+  local-viewer:
+    build:
+      context: .
+      args:
+        VERSION: dev
+    image: local-viewer:dev
+    container_name: local-viewer
+    ports:
+      - "8080:8080"
+    environment:
+      - LSV_ADDR=:8080
+      - LSV_DATA=/data
+    # lets the container reach services on your host (e.g. LocalStack on :4566)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro   # enables the Docker view
+      - local-viewer-data:/data                         # persists connections + PIN
+    restart: unless-stopped
+
+volumes:
+  local-viewer-data:

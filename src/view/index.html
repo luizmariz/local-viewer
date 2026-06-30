@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Local Viewer</title>
+<link id="favicon" rel="icon" href="data:," />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="bg-slate-950 text-slate-400 h-screen flex flex-row overflow-hidden">
+
+<div id="mainCol" class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+<header class="border-b border-slate-800 px-2 flex items-center gap-2 flex-shrink-0 h-12">
+
+  <div class="flex items-center gap-2 mr-1 flex-shrink-0">
+    <span id="logoSlot" class="flex-shrink-0" style="display:inline-flex;width:24px;height:24px"></span>
+    <span class="brand" style="font-weight:700;font-size:16px">LOCAL VIEWER</span>
+  </div>
+
+  <div class="vdiv mx-1"></div>
+
+  <lv-button id="appsBtn" variant="chip" style="font-weight:700" title="Views — drag onto a panel">
+    <lv-icon name="apps" size="14" style="color:#a5b4fc"></lv-icon>
+    <span data-i18n="ui.views">Views</span>
+  </lv-button>
+  <lv-button id="layoutsBtn" variant="chip" style="font-weight:700" title="Layouts — save / load / reset">
+    <lv-icon name="layouts" size="14" style="color:#7dd3fc"></lv-icon>
+    <span data-i18n="ui.layouts">Layouts</span>
+  </lv-button>
+
+  <div class="flex-1"></div>
+
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <span id="meta" class="text-[12px] text-slate-500"></span>
+    <span id="ticker" class="tabular-nums text-slate-400 text-[13px]">Idle</span>
+    <div style="position:relative;display:inline-flex;align-items:center">
+      <svg id="refreshIcon" viewBox="0 0 20 20" fill="currentColor" style="position:absolute;left:9px;width:14px;height:14px;pointer-events:none">
+        <path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.929a.75.75 0 00-1.5 0V5.36l-.31-.31A7 7 0 003.239 8.188a.75.75 0 101.448.389A5.5 5.5 0 0113.89 6.11l.311.311h-2.432a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clip-rule="evenodd"/>
+      </svg>
+      <select id="interval" class="hdr-ctl" style="padding-left:28px">
+        <option value="1000">1s</option>
+        <option value="2000" selected>2s</option>
+        <option value="5000">5s</option>
+        <option value="15000">15s</option>
+        <option value="0">off</option>
+      </select>
+    </div>
+    <lv-button id="pause" variant="icon" title="pause"></lv-button>
+    <div class="vdiv"></div>
+    <lv-button id="settingsToggle" variant="icon" title="Settings" data-i18n-title="ui.settings">
+      <lv-icon name="settings" size="14"></lv-icon>
+    </lv-button>
+    <lv-button id="logToggleBtn" variant="icon" title="Operations log"><lv-icon name="logs" size="16"></lv-icon></lv-button>
+  </div>
+</header>
+
+<div id="settingsModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head"><span data-i18n="set.title">Settings</span><lv-icon id="settingsClose" name="close" size="16" class="icon-act" title="close"></lv-icon></div>
+    <div class="modal-body">
+      <div>
+        <div style="font-size:12px;letter-spacing:.02em;color:#64748b;margin-bottom:5px" data-i18n="set.language">Language</div>
+        <select id="langSel" class="cn-in" style="width:100%">
+          <option value="en">English</option>
+          <option value="ptBR">Português (Brasil)</option>
+        </select>
+      </div>
+
+      <div style="border-top:1px solid rgb(30 41 59)"></div>
+
+      <div>
+        <div style="font-size:12px;letter-spacing:.02em;color:#64748b;margin-bottom:6px" data-i18n="set.connections">Connections</div>
+        <div id="connList" style="display:flex;flex-direction:column;gap:5px"></div>
+
+        <lv-button id="connAddBtn" variant="hdr" style="width:100%;margin-top:10px" data-i18n="set.addConn">+ Add connection</lv-button>
+
+        <div id="connKinds" class="conn-kinds">
+          <button class="conn-kind" data-kind="aws"><span class="ck-icon"></span><span>AWS</span></button>
+          <button class="conn-kind" data-kind="kafka"><span class="ck-icon"></span><span>Kafka</span></button>
+          <button class="conn-kind" data-kind="pgmq"><span class="ck-icon"></span><span>PGMQ</span></button>
+        </div>
+
+        <div id="connForm" class="conn-form">
+          <div id="connFormTitle" style="font-size:12px;color:#94a3b8"></div>
+          <lv-input id="cnName" placeholder="name"></lv-input>
+          <div id="cnAwsFields" style="display:flex;flex-direction:column;gap:6px">
+            <lv-input id="cnEndpoint" placeholder="endpoint URL — http://localhost:4566"></lv-input>
+            <div style="display:flex;gap:6px">
+              <lv-input id="cnRegion" placeholder="region" style="flex:1"></lv-input>
+              <lv-input id="cnAccess" placeholder="access key" style="flex:1"></lv-input>
+            </div>
+            <lv-input id="cnSecret" type="password" placeholder="secret key"></lv-input>
+          </div>
+          <div id="cnKafkaFields" style="display:none">
+            <lv-input id="cnBroker" placeholder="broker — host:port (localhost:9092)"></lv-input>
+          </div>
+          <div id="cnPgmqFields" style="display:none">
+            <lv-input id="cnDsn" placeholder="DSN — postgres://user:pass@host:5432/db"></lv-input>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:2px">
+            <lv-button id="cnCancel" variant="ghost">Cancel</lv-button>
+            <lv-button id="cnAdd" variant="primary">Create</lv-button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#475569;margin-top:8px" data-i18n="set.connHint">Add as many as you like — views show items from every connection of their kind. Secrets are encrypted at rest.</div>
+      </div>
+
+      <div style="border-top:1px solid rgb(30 41 59)"></div>
+
+      <div id="secSection">
+        <div style="font-size:12px;letter-spacing:.02em;color:#64748b;margin-bottom:6px" data-i18n="set.security">Security</div>
+        <div id="secBody" style="font-size:13px;color:#94a3b8"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="loginOverlay" class="modal-backdrop">
+  <div class="modal" style="width:360px">
+    <div class="modal-head"><span data-i18n="login.title">Sign in</span></div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:#94a3b8" data-i18n="login.hint">Enter your 6-digit PIN.</div>
+      <div style="display:flex;gap:6px">
+        <lv-input id="loginCode" class="pin" mono inputmode="numeric" maxlength="6" placeholder="••••••" style="flex:1"></lv-input>
+        <lv-button id="loginBtn" variant="primary" data-i18n="login.btn">Login</lv-button>
+      </div>
+      <div id="loginErr" style="font-size:12px;color:#f87171"></div>
+    </div>
+  </div>
+</div>
+
+<div id="cfBanner" style="display:none">
+  <div class="cf-banner-row">
+    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-orange-400 flex-shrink-0">
+      <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+    </svg>
+    <span id="cfBannerText" class="cf-banner-text"></span>
+    <button id="cfBannerToggle" class="cf-banner-btn">view</button>
+    <button id="cfBannerDismiss" class="cf-banner-btn">dismiss</button>
+  </div>
+  <div id="cfBannerList" class="cf-banner-list" style="display:none"></div>
+</div>
+
+  <div class="flex flex-1 overflow-hidden">
+    <main id="grid"></main>
+  </div>
+
+</div><!-- /mainCol -->
+
+<aside id="logPanel" class="w-80 border-l border-slate-800 flex flex-col flex-shrink-0 bg-slate-950" style="position:relative">
+  <div class="border-b border-slate-800 flex-shrink-0" style="height:48px;display:flex;align-items:center;gap:8px;padding:0 10px">
+    <lv-button id="logClose" variant="chev" title="hide operations log"><lv-icon name="chevron" size="18"></lv-icon></lv-button>
+    <span class="font-semibold" style="font-size:14px;line-height:1" data-i18n="ops.log">Operations log</span>
+    <div style="flex:1"></div>
+    <lv-icon id="logClear" name="brush" size="15" class="icon-act" title="clear log"></lv-icon>
+    <lv-icon id="logExpand" name="expand" size="15" class="icon-act" title="open logs in a wide modal"></lv-icon>
+  </div>
+  <div id="logs" class="flex-1 overflow-y-auto px-4 py-3 mono"></div>
+  <div class="log-fab">
+    <lv-button id="logScrollTop" variant="icon" size="sm" title="scroll to top">&#x2191;</lv-button>
+    <lv-button id="logScrollBottom" variant="icon" size="sm" title="scroll to bottom">&#x2193;</lv-button>
+  </div>
+</aside>
+
+<div id="appsPane">
+  <div style="font-size:12px;letter-spacing:.02em;color:#64748b;margin-bottom:6px" data-i18n="ui.viewsHint">Views — drag onto a panel</div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div id="chip-sqs" class="app-tile">
+      <lv-icon name="grip" size="12" style="color:#64748b"></lv-icon>
+      <lv-icon name="sqs" size="14" style="color:#fb7185"></lv-icon>
+      SQS Queues
+    </div>
+    <div id="chip-s3" class="app-tile">
+      <lv-icon name="grip" size="12" style="color:#64748b"></lv-icon>
+      <lv-icon name="s3" size="14" style="color:#34d399"></lv-icon>
+      S3 Buckets
+    </div>
+    <div id="chip-docker" class="app-tile">
+      <lv-icon name="grip" size="12" style="color:#64748b"></lv-icon>
+      <lv-icon name="docker" size="16" style="color:#38bdf8"></lv-icon>
+      Docker
+    </div>
+    <div id="chip-kafka" class="app-tile">
+      <lv-icon name="grip" size="12" style="color:#64748b"></lv-icon>
+      <lv-icon name="kafka" size="14" style="color:#a78bfa"></lv-icon>
+      Kafka
+    </div>
+    <div id="chip-pgmq" class="app-tile">
+      <lv-icon name="grip" size="12" style="color:#64748b"></lv-icon>
+      <lv-icon name="pgmq" size="14" style="color:#22d3ee"></lv-icon>
+      PGMQ
+    </div>
+  </div>
+</div>
+
+<div id="layoutsPane">
+  <lv-button id="resetLayout" variant="chip" style="width:100%" data-i18n="lay.reset">Reset to default layout</lv-button>
+  <div style="border-top:1px solid rgb(30 41 59);margin:10px 0 8px"></div>
+  <div style="font-size:12px;letter-spacing:.02em;color:#64748b;margin-bottom:6px" data-i18n="lay.save">Save current layout</div>
+  <div style="display:flex;gap:6px;margin-bottom:10px">
+    <lv-input id="layoutName" mono placeholder="layout name…" style="flex:1"></lv-input>
+    <lv-button id="layoutSave" variant="hdr" data-i18n="lay.saveBtn">Save</lv-button>
+  </div>
+  <div style="font-size:12px;letter-spacing:.02em;color:#64748b;margin-bottom:6px" data-i18n="lay.saved">Saved layouts</div>
+  <div id="layoutList" style="display:flex;flex-direction:column;gap:4px"></div>
+  <div style="font-size:12px;color:#475569;margin-top:8px">The active layout auto-saves between sessions.</div>
+</div>
+
+<div id="dropOverlay"></div>
+<div id="tip"></div>
+<div id="filterPop"></div>
+
+<div id="confirmModal" class="modal-backdrop" style="z-index:9996">
+  <div class="modal" style="width:420px">
+    <div class="modal-head"><span id="confirmTitle">Confirm</span></div>
+    <div class="modal-body">
+      <div id="confirmMsg" style="font-size:13px;color:#c2cbd8;line-height:1.5;white-space:pre-line"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+        <button id="confirmCancel" class="btn-ghost"></button>
+        <button id="confirmOk" class="btn-danger"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="newObjModal" class="modal-backdrop" style="z-index:9996">
+  <div class="modal" style="width:520px">
+    <div class="modal-head"><span>New text object</span><lv-icon id="newObjX" name="close" size="16" class="icon-act" title="close"></lv-icon></div>
+    <div class="modal-body">
+      <div id="newObjBucket" style="font-size:12px;color:#64748b"></div>
+      <lv-input id="newObjKey" mono placeholder="key — e.g. config/new.json"></lv-input>
+      <textarea id="newObjBody" class="cn-in mono" placeholder="file contents…" style="min-height:200px;resize:vertical"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <lv-button id="newObjCancel" variant="ghost">Cancel</lv-button>
+        <lv-button id="newObjCreate" variant="primary">Create</lv-button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="logModal" class="modal-backdrop" style="z-index:9997">
+  <div class="modal" style="width:900px;max-width:94vw;height:82vh;display:flex;flex-direction:column;position:relative">
+    <div class="modal-head">
+      <span id="logModalTitle">Logs</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <lv-button id="logModalFmt" variant="hdr" size="sm" title="toggle raw / formatted">Raw</lv-button>
+        <lv-button id="logModalClose" variant="icon" size="sm" title="close"><lv-icon name="close" size="14"></lv-icon></lv-button>
+      </div>
+    </div>
+    <div id="logModalBody" class="clog scroll" style="flex:1;min-height:0;overflow:auto;padding:10px 14px"></div>
+    <div class="log-fab" style="bottom:18px;right:18px">
+      <lv-button id="logModalTop" variant="icon" size="sm" title="scroll to top">&#x2191;</lv-button>
+      <lv-button id="logModalBottom" variant="icon" size="sm" title="scroll to bottom">&#x2193;</lv-button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/main.js"></script>
+</body>
+</html>

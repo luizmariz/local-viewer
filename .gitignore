@@ -1,0 +1,25 @@
+# --- build artifacts / binaries ---
+/local-viewer
+/lsv
+/out/
+dist/
+*.exe
+
+# --- runtime data & logs ---
+/data/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# --- node (example seed tooling only) ---
+node_modules/
+example/localstack-data/
+
+# --- editor / OS / tooling ---
+.DS_Store
+.idea/
+.vscode/
+.playwright-mcp/
+*.tmp
+*.zip
