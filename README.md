@@ -17,6 +17,8 @@ tiling dashboard.
 
 ---
 
+<img width="3824" height="1907" alt="image" src="https://github.com/user-attachments/assets/ea1f1c6a-0101-45f3-bbc8-1f2b8c08795c" />
+
 ## Why
 
 When you develop against LocalStack, Garage, MinIO, a Kafka broker, a Postgres
