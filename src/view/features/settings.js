@@ -10,7 +10,16 @@ import { showLogin } from './auth.js'
 
 const TRASH = iconSvg('trash', 14)
 const settingsModal = document.getElementById('settingsModal')
-function openSettings(on) { settingsModal.classList.toggle('open', on); if (on) { connAddReset(); renderConnList(); renderSecurity() } }
+function openSettings(on) { settingsModal.classList.toggle('open', on); if (on) { connAddReset(); renderConnList(); renderSecurity(); renderAbout() } }
+
+// ---- about (running version — surfaced so users can report it when debugging) ----
+function renderAbout() {
+  const el = document.getElementById('aboutVersion')
+  if (!el) return
+  fetch('/api/version').then((r) => r.json())
+    .then((d) => { el.textContent = 'Local Viewer v' + (d.version || '?') })
+    .catch(() => { el.textContent = 'Local Viewer' })
+}
 
 // ---- connections manager ----
 const KIND_LABEL = { aws: 'AWS', kafka: 'Kafka', pgmq: 'PGMQ' }

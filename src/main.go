@@ -32,7 +32,7 @@ import (
 var viewFS embed.FS
 
 // Version is overridable at build time: -ldflags "-X main.Version=1.2.3".
-var Version = "0.1.0-dev"
+var Version = "0.2.0-dev"
 
 func main() {
 	addr := envOr("LSV_ADDR", ":8080")

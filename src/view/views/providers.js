@@ -48,6 +48,15 @@ async function providerLoadMsgs(cfg, vs, id, name, conn) {
   catch (e) {}
   vs.msgsLoading = false; updateLeaf(id)
 }
+// live tail: re-peek the open topic/queue quietly (no loading flash), replacing
+// only if the selection hasn't changed mid-flight. Driven by the regular poll.
+function providerTailMsgs(cfg, vs, id) {
+  const name = vs.selected, conn = vs.selectedConn
+  fetch(cfg.msgUrl + '?conn=' + encodeURIComponent(conn) + '&' + cfg.msgParam + '=' + encodeURIComponent(name))
+    .then((r) => r.json())
+    .then((d) => { if (vs.selected === name && vs.selectedConn === conn) { vs.messages = d.messages || []; updateLeaf(id) } })
+    .catch(() => { /* transient — keep last good messages */ })
+}
 
 /** Build the Kafka or PGMQ view object. */
 export function providerView(kind) {
@@ -79,6 +88,8 @@ export function providerView(kind) {
     },
     // aggregate across all connections of this kind (or the filtered one)
     refresh(vs, id) {
+      // while a topic/queue is open, keep its messages tailing on every poll
+      if (vs.selected) providerTailMsgs(cfg, vs, id)
       const ff = vs.connFilter || []
       const targets = ff.length ? getConns(kind).filter((c) => ff.includes(c.id)) : getConns(kind)
       if (!targets.length) { vs.items = []; vs.err = null; updateLeaf(id); return }

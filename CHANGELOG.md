@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-01
+
+### Added
+
+- **Live tail** — detail panes now keep updating on the poll cycle **while open**:
+  a selected Docker container's **logs** re-tail continuously (scroll stays pinned
+  to the bottom while following, or holds your position if you scrolled up), and
+  an open **Kafka topic** / **PGMQ queue** re-peeks its messages. SQS message
+  peeks were already live. All follow the header's pause/interval control.
+- **Version in Settings** — an **About** row shows the running `Local Viewer vX.Y.Z`
+  (from `/api/version`), so it's easy to report which build you're on when debugging.
+
 ## [0.1.0] - 2026-06-30
 
 First public release. A single self-hostable container that gives you a tiling
@@ -39,5 +51,6 @@ dashboard over your local/dev infrastructure.
 - **Single container** — Go backend with an embedded buildless SPA (native ES
   modules + `lv-*` Web Components), SQLite storage, `CGO_ENABLED=0` distroless image.
 
-[Unreleased]: https://github.com/luizmariz/local-viewer/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/luizmariz/local-viewer/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/luizmariz/local-viewer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/luizmariz/local-viewer/releases/tag/v0.1.0

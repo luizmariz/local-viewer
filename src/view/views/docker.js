@@ -166,6 +166,18 @@ async function dockerLogs(vs, id, cid, name) {
   catch (e) { vs.logs = 'error: ' + e.message }
   updateLeaf(id)
 }
+// live tail: re-fetch the open container's logs quietly (no "loading…" flash),
+// only replacing when the selection hasn't changed mid-flight. Driven by the
+// regular poll (dockerView.refresh) so it follows the header pause/interval.
+async function dockerTailLogs(vs, id) {
+  const cid = vs.selected
+  try {
+    const d = await (await fetch('/api/docker/containers/' + cid + '/logs?tail=300')).json()
+    if (vs.selected !== cid) return
+    vs.logs = d.logs != null ? d.logs : (d.error || '(empty)')
+    updateLeaf(id)
+  } catch (e) { /* transient — keep the last good logs */ }
+}
 async function dockerEnv(vs, id, cid) {
   vs.envLoading = true; vs.env = null; updateLeaf(id)
   try { const d = await (await fetch('/api/docker/containers/' + cid + '/inspect')).json(); vs.env = Array.isArray(d.env) ? d.env : [] }
@@ -239,7 +251,11 @@ function dockerView() {
         updateLeaf(id)
       })
     },
-    refresh(vs, id) { dockerRefresh(vs, id) },
+    refresh(vs, id) {
+      dockerRefresh(vs, id)
+      // while a container's log pane is open, keep it tailing on every poll
+      if (vs.selected && (vs.dkPane || 'logs') === 'logs') dockerTailLogs(vs, id)
+    },
     update(bodyEl, hs, vs, id) {
       const tab = vs.tab || 'containers'
       bodyEl.querySelectorAll('.dk-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
@@ -320,10 +336,12 @@ function dockerView() {
       const side = bodyEl.querySelector('.dk-side')
       if (vs.selected && tab === 'containers') {
         side.classList.add('open')
-        const sh = hash([vs.selected, vs.selectedName, vs.logs, vs.dkPane, vs.env, vs.envLoading])
+        const pane = vs.dkPane || 'logs'
+        // head/structure hash: rebuilds the head + rewires buttons only when the
+        // selection or active pane changes — NOT on every tailed log update
+        const sh = hash([vs.selected, vs.selectedName, pane])
         if (hs.s !== sh) {
-          hs.s = sh
-          const pane = vs.dkPane || 'logs'
+          hs.s = sh; hs.c = null
           bodyEl.querySelector('.dk-side-head').innerHTML =
             '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid rgb(30 41 59)">'
             + '<lv-button class="pane-chev" variant="chev" title="close">' + CHEVRON + '</lv-button>'
@@ -339,8 +357,6 @@ function dockerView() {
           bodyEl.querySelector('.dk-pane-env').classList.toggle('active', pane === 'env')
           logsEl.style.display = pane === 'logs' ? 'block' : 'none'
           envEl.style.display = pane === 'env' ? 'block' : 'none'
-          if (pane === 'logs') logsEl.innerHTML = formatLogs(vs.logs || '')
-          else envEl.innerHTML = dockerEnvHtml(vs.env, vs.envLoading)
           const exp = bodyEl.querySelector('.dk-log-expand')
           if (exp) exp.addEventListener('click', () => (vs.dkPane === 'env')
             ? openLogsModal(vs.selectedName + ' — env', (vs.env || []).join('\n'), 'env')
@@ -353,7 +369,22 @@ function dockerView() {
             if (vs.env === null && !vs.envLoading) dockerEnv(vs, id, vs.selected); else updateLeaf(id)
           })
         }
-      } else { side.classList.remove('open'); hs.s = '__closed' }
+        // content hash: re-renders only the log/env body on each tail, keeping the
+        // scroll pinned to the bottom while following (else the user's position)
+        const ch = hash([pane, pane === 'logs' ? vs.logs : vs.env, vs.envLoading])
+        if (hs.c !== ch) {
+          hs.c = ch
+          if (pane === 'logs') {
+            const logsEl = bodyEl.querySelector('.dk-logs')
+            const prev = logsEl.scrollTop
+            const atBottom = logsEl.scrollTop + logsEl.clientHeight >= logsEl.scrollHeight - 24
+            logsEl.innerHTML = formatLogs(vs.logs || '')
+            logsEl.scrollTop = atBottom ? logsEl.scrollHeight : prev
+          } else {
+            bodyEl.querySelector('.dk-env').innerHTML = dockerEnvHtml(vs.env, vs.envLoading)
+          }
+        }
+      } else { side.classList.remove('open'); hs.s = '__closed'; hs.c = null }
     },
   }
 }
